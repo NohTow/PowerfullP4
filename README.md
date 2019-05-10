@@ -10,6 +10,7 @@ Tout le code du jeu ainsi que celui de l'intelligence artificielle se trouvent d
 ## Explication du code source 
 ### Constantes & attributs
 Les constantes suivantes permettent de contrôler les paramètres globales du jeu.
+
 | Constantes |                 Définitions                 |
 |:----------:|:-------------------------------------------:|
 | n          | Représente le nombre de lignes du plateau   |
@@ -20,6 +21,7 @@ Les constantes suivantes permettent de contrôler les paramètres globales du je
   m: 7,
 ```
 Les attributs suivants sont utilisés pour modéliser le jeu.
+
 |     Attributs    |                    Définitions                   |
 |:-----------------:|:------------------------------------------------:|
 | dom_plateau : []  | Représente le plateau sous la forme d'un tableau |
@@ -45,6 +47,7 @@ Les attributs suivants sont utilisés pour modéliser le jeu.
 ### Méthodes
 #### init(parent, lignes, colonnes)
 Méthode permettant d'initialiser l'objet p4 et de créer le tableau HTML contenant un certains nombre de lignes et de colonnes et d'ajouter le handler gérant le click pour jouer.
+
 | Paramètres |                    Définitions                    |
 |:----------:|:-------------------------------------------------:|
 | parents    | Le nom de l'élément HTML auquel ajouté l'objet p4 |
@@ -77,6 +80,7 @@ if (lignes) this.n = lignes;
 ```
 #### set(row, column, player)
 Méthode permettant de remplir la case du tableau après un coup, incrémente le nombre de coup et change le tour actuel.
+
 | Paramètres |              Définitions             |
 |:----------:|:------------------------------------:|
 | row        |         Ligne du coup à jouer        |

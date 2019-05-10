@@ -202,7 +202,7 @@ var column = event.target.dataset.column;
     this.play(parseInt(bestMoove["Moove"]));
 ```
 
-#### geTab()
+#### getTab()
 Méthode permettant de récuperer le plateau de jeu sous forme de tableau javascript
 
 | Paramètres |                     Définitions                    |
@@ -274,4 +274,223 @@ Méthode permettant de savoir si le joueur à gagné.
         }
       }
     return false;  
+```
+#### getMovePlayable(board)
+Méthode permettant de récupérer les numéros des colonnes où l'on peut jouer sous forme de tableau javascript.
+
+| Paramètres |                                 Définitions                                 |
+|:----------:|:---------------------------------------------------------------------------:|
+| board      |                          Le plateau de jeu à tester                         |
+| RETURN     | Un tableau javascript contenant les numéros des colonnes où l'on peut jouer |
+
+```javascript
+	var resTab = [];
+	for (var j = 0 ; j < this.m ; j++){
+        	if(board[this.n-1][j] == 0) resTab.push(j)
+      	}
+	return resTab;
+```
+
+#### is_terminal_node(board)
+Méthode permettant de savoir si la partie est finie
+
+| Paramètres |                               Définitions                               |
+|:----------:|:-----------------------------------------------------------------------:|
+| board      |                        Le plateau de jeu à tester                       |
+| RETURN     | True si un joueur à gagner ou qu'aucun coup n'est possible, false sinon |
+```javascript
+return (is_won(board,1) || is_won(board,2) || getMovePlayable(board).length == 0)
+```
+
+#### evaluate_window(window, player)
+Méthode permettant de retourner une valeur représentant les possibilités offertes au joueur dans une "fenêtre" de 4 pions.
+
+| Paramètres |                               Définitions                               |
+|:----------:|:-----------------------------------------------------------------------:|
+| window     |                 Tableau représentant 4 pions du plateau                 |
+| RETURN     | Le score représentant les possibilités offerte par la fenêtre au joueur |
+
+```javascript
+countOwn = 0;
+      countAdv = 0;
+      for(var i = 0 ; i<4 ; i++){
+        if(window[i] == player) countOwn++;
+        else if(window[i] !=0) countAdv++;
+      }
+      //console.log("countOwn : "+countOwn);
+      //console.log("Count adv : "+countAdv)
+      if(countOwn==4) return 100;
+      else if(countOwn == 3 && countAdv == 0) return 5;
+      else if(countOwn == 2 && countAdv == 0) return 2;
+      else if(countAdv == 3 && countOwn == 0) return -4;
+      return 0;
+    },
+    score_position: function(board, player){
+      var score = 0;
+      //on test toutes les lignes possibles à réaliser
+      for(i = 0 ; i< this.n; i++){
+        for(j = 0 ; j<this.m-3 ; j++){
+          window_test = [];
+          window_test.push(board[i][j]);
+          window_test.push(board[i][j+1]);
+          window_test.push(board[i][j+2]);
+          window_test.push(board[i][j+3]);
+          score+= this.evaluate_window(window_test, player);
+          //console.log(window_test);
+        }
+      }
+      for(i = 0 ; i < this.m ; i++){
+        for(j = 0; j< this.n-3 ; j++){                                                      
+          window_test = [];
+          window_test.push(board[j][i]);
+          window_test.push(board[j+1][i]);
+          window_test.push(board[j+2][i]);
+          window_test.push(board[j+3][i])
+          score+= this.evaluate_window(window_test, player);
+          //console.log(window_test);
+          //console.log(score)
+        }
+      }
+      //diagonale qui monte
+      for(i = 0 ; i< this.n - 3 ; i++){
+        for(j = 0 ; j < this.m - 3 ; j++){
+          window_test = []
+          window_test.push(board[i][j]);
+          window_test.push(board[i+1][j+1]);
+          window_test.push(board[i+2][j+2]);
+          window_test.push(board[i+3][j+3]);
+          score+= this.evaluate_window(window_test, player);
+          //console.log(window_test);
+          //console.log(score);
+        }
+      }
+
+      for(i=0 ; i<this.n-3 ; i++){
+        for(j = 0 ; j< this.m - 3 ; j++){
+          window_test = [];
+          window_test.push(board[i+3][j]);
+          window_test.push(board[i+3-1][j+1]); //ahah
+          window_test.push(board[i+3-2][j+2]);
+          window_test.push(board[i][j+3]);
+          //console.log(window_test);
+          //console.log(score);
+        }
+      }
+      return score;
+```
+
+#### getRandomInt(max)
+Méthode permettant de choisir un entier au hasard compris entre 0 et max-1
+
+| Paramètres |                  Définitions                 |
+|:----------:|:--------------------------------------------:|
+| max        |    La borne supérieur des choix possibles    |
+| RETURN     | Un entier aléatoire compris entre 0 et max-1 |
+
+```javascript
+return Math.floor(Math.random() * Math.floor(max));
+```
+
+#### minmax(board, depth, alpha, beta, maximizingPlayer)
+Méthode récursive de l'algorithme minmax
+
+|    Paramètres    |                                       Définitions                                       |
+|:----------------:|:---------------------------------------------------------------------------------------:|
+| board            |                         Plateau sur lequel on applique le minmax                        |
+| depth            |         Entier permettant de limiter la profondeur de la recherche dans l'arbre         |
+| alpha            |                    Valeur du paramètre alpha pour la coupe alpha-bêta                   |
+| beta             |                    Valeur du paramètre beta pour la coupe alpha-bêta                    |
+| maximizingPlayer |   Boolean permettant de savoir si on est le joueur qui maximise ou celui qui minimise   |
+| RETURN           | Un couple (Valeur, Moove) représentant le score et la colonne du meilleur coup possible |
+```javascript
+      var valid_moove =  this.getMovePlayable(board);
+      var res = new Object();
+      //var res = []
+      is_terminal_node = this.is_won(board, 1) || this.is_won(board, 2);
+      if(depth == 0 || is_terminal_node){
+        if(is_terminal_node){
+          if(this.is_won(board, 2)){
+            res["Moove"]= 'None';
+            res["Score"]= 9999999999;
+            //console.log(depth);
+            //console.log(res);
+            return res;
+          }else if(this.is_won(board, 1)){
+            res["Moove"]= 'None';
+            res["Score"]= -99999999;
+            //console.log(res);
+            //console.log(depth);
+            //console.log(res);
+            return res;
+          }else{
+            res["Moove"]= 'None';
+            res["Score"]= 0;
+            //console.log(depth);
+            //console.log(res);
+          } 
+        }else{
+          res["Moove"]= 'None';
+          res["Score"] = this.score_position(board, 2);
+          //console.log(res);
+          //console.log(depth);
+          //console.log(res);
+          return res;
+        }
+      }else{
+        if(maximizingPlayer){
+          value = Number.NEGATIVE_INFINITY;
+          var choices = this.getMovePlayable(board);
+          var number_of_choice = choices.length;
+          var column = this.getRandomInt(number_of_choice);
+          for(var i = 0 ; i < number_of_choice ; i++){
+            var tempBoard = []
+            var col = choices[i];
+            row = this.get_open_row(board, col);
+            for(z = 0 ; z<this.n ; z++){
+              tempBoard.push(Array.from(board[z]))
+            }
+            tempBoard[row][col] = 2;
+            var new_score = this.minmax(tempBoard, depth-1, alpha, beta, false)
+            if(new_score["Score"] > value){
+              value = new_score["Score"];
+              column = col;
+            }
+            var alpha = Math.max(alpha, value);
+            if(alpha >= beta){
+              break;
+            }
+          }
+          res["Moove"] = column;
+          res["Score"] = value;
+        }else{
+          var value = Number.POSITIVE_INFINITY;
+          var choices = this.getMovePlayable(board);
+          var number_of_choice = choices.length;
+          var column = this.getRandomInt(number_of_choice);
+          for(i=0 ; i<number_of_choice ; i++){
+            var tempBoard = [];
+            var col = choices[i];
+            row = this.get_open_row(board,col);
+            for(j=0;j<this.n;j++){
+              tempBoard.push(Array.from(board[j]));
+            }
+            tempBoard[row][col] = 1;
+            var new_score = this.minmax(tempBoard, depth-1, alpha, beta, true)
+            if(new_score["Score"] < value){
+              value = new_score["Score"];
+              column = col;
+            }
+            var beta = Math.min(beta, value)
+            if(alpha >= beta){
+              break;
+            }
+            
+          }
+          res["Moove"] = column;
+          res["Score"] = value;
+        } 
+      }
+      //console.log(depth);
+      //console.log(res);
+      return res;
 ```
